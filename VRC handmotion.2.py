@@ -5,6 +5,9 @@ import tkinter as tk
 import argparse
 from pythonosc import udp_client
 
+import win32api
+import win32con
+
 # 初期座標を指定
 WRIST_x = 300
 WRIST_y = 200
@@ -99,6 +102,10 @@ with mp.solutions.hands.Hands(
                         RING_FINGER_MCP_x = x
                     elif index == 17:  # 小指の先
                         PINKY_FINGER_MCP_x = x
+                    elif index == 4:  
+                        THUMB_FINGER_TIP_x = x
+                    elif index == 4:  
+                        THUMB_FINGER_TIP_y = y
 
                     print(f"Hand {results.multi_handedness[0].classification[0].label}: Joint {index} - X: {x}, Y: {y}")
 
@@ -120,30 +127,35 @@ with mp.solutions.hands.Hands(
             wrist_landmark = results.multi_hand_landmarks[0].landmark[0]  # 手首に対応する最初のランドマークを仮定
             WRIST_x, WRIST_y = int(wrist_landmark.x * image.shape[1]), int(wrist_landmark.y * image.shape[0])
 
-        #視点移動　水平     
-        if WRIST_x > 400:
-            key_input = -0.2
-            client.send_message("/input/LookHorizontal", key_input)
 
-        if WRIST_x < 200:
-            key_input = 0.2
-            client.send_message("/input/LookHorizontal", key_input)
         
-        if 200 < WRIST_x < 400:
-            key_input = 0.1
-            client.send_message("/input/LookHorizontal", key_input)
+            #視点移動　水平     
+            if WRIST_x > 400:
+                key_input = -0.2
+                client.send_message("/input/LookHorizontal", key_input)
 
-        #if  WRIST_x > 300:
-            #key_input = 0.2
-            #client.send_message("/input/LookVertical", key_input)
+            if WRIST_x < 200:
+                key_input = 0.2
+                client.send_message("/input/LookHorizontal", key_input)
+            
+            if 200 < WRIST_x < 400:
+                key_input = 0.1
+                client.send_message("/input/LookHorizontal", key_input)
 
-        #if  WRIST_x < 100:
-            #key_input = -0.2
-            #client.send_message("/input/LookVertical", key_input)
+            #視点移動　垂直
+            if  WRIST_y > 250:
+                key_input = -0.2
+                client.send_message("/input/LookVertical", key_input)
 
-        #if  100 < WRIST_x < 300:
-            #key_input = 0.1
-            #client.send_message("/input/LookVertical", key_input)
+            if  WRIST_y < 300:
+                key_input = 0.2
+                client.send_message("/input/LookVertical", key_input)
+
+            if  250 < WRIST_y < 400:
+                key_input = 0.1
+                client.send_message("/input/LookVertical", key_input)
+            
+
 
 
         # 手首と指の位置の差の条件を設定して握りこみの判定
@@ -153,8 +165,7 @@ with mp.solutions.hands.Hands(
                 circle_radius = 50
                 
                 #左クリック　押す
-                key_inputgrab = 1
-                client.send_message("/input/UseRight", key_inputgrab)
+                win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
 
                 fx = WRIST_x * 3.2
                 fy = (WRIST_y - 200) * 2.7
@@ -166,8 +177,7 @@ with mp.solutions.hands.Hands(
                 
         else: 
                 #左クリック　離す
-                key_inputgrab = 1
-                client.send_message("/input/DropRight", key_inputgrab)
+                win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
                 fx = WRIST_x * 3.2
                 fy = (WRIST_y - 200) * 2.7
                 
